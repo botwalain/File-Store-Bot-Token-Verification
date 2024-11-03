@@ -57,7 +57,7 @@ async def start_command(client: Client, message: Message):
 
         elif decoded_string.startswith("premium"):
             if not is_premium:
-                await message.reply("Buy premium to access this content.\nTo Buy Contact @sewxiy")
+                await message.reply("Buy premium to access this content.\nTo Buy Contact @delight_admin_bot")
                 return
             
             argument = decoded_string.split("-")
@@ -145,7 +145,7 @@ async def start_command(client: Client, message: Message):
     else:
         try:
             reply_markup = InlineKeyboardMarkup([
-                [InlineKeyboardButton("• ғᴏʀ ᴍᴏʀᴇ •", url='https://t.me/OtakuFlix_Network/4630')],
+                [InlineKeyboardButton("• ғᴏʀ ᴍᴏʀᴇ •", url='https://t.me/DelightRedirect')],
                 [InlineKeyboardButton("ᴄʟᴏsᴇ", callback_data='close'),
                  InlineKeyboardButton("ᴀʙᴏᴜᴛ", callback_data='about')]
            ])

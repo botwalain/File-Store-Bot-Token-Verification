@@ -15,8 +15,6 @@ from database.db_premium import remove_expired_users
 
 import asyncio
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 scheduler = AsyncIOScheduler()
 scheduler.add_job(remove_expired_users, "interval", seconds=3600)
 scheduler.start()

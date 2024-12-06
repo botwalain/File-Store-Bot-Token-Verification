@@ -13,6 +13,31 @@ from config import API_HASH, APP_ID, LOGGER, TG_BOT_TOKEN, TG_BOT_WORKERS, FORCE
 from dotenv import load_dotenv
 from database.db_premium import remove_expired_users
 
+import asyncio
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
+# Define your job
+def my_job():
+    print("Job is running!")
+
+# Main function
+async def main():
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(my_job, 'interval', seconds=10)  # Run job every 10 seconds
+    scheduler.start()
+    print("Scheduler started!")
+
+    # Keep the loop alive
+    try:
+        await asyncio.Event().wait()
+    except KeyboardInterrupt:
+        print("Shutting down scheduler...")
+        scheduler.shutdown()
+
+# Entry point
+if __name__ == "__main__":
+    asyncio.run(main())
+
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 scheduler = AsyncIOScheduler()
 scheduler.add_job(remove_expired_users, "interval", seconds=3600)

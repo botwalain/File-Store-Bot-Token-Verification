@@ -15,9 +15,6 @@ from database.db_premium import remove_expired_users
 
 import asyncio
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-scheduler = AsyncIOScheduler()
-scheduler.add_job(remove_expired_users, "interval", seconds=3600)
-scheduler.start()
 
 load_dotenv(".env")
 
@@ -82,6 +79,11 @@ class Bot(Client):
         await app.setup()
         bind_address = "0.0.0.0"
         await web.TCPSite(app, bind_address, PORT).start()
+
+        # Start APScheduler inside the async environment
+        scheduler = AsyncIOScheduler()
+        scheduler.add_job(remove_expired_users, "interval", seconds=3600)
+        scheduler.start()
 
     async def stop(self, *args):
         await super().stop()

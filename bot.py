@@ -1,59 +1,27 @@
-#(©)Codexbotz
-
+import asyncio
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from aiohttp import web
 from plugins import web_server
-
 import pyromod.listen
 from pyrogram import Client
 from pyrogram.enums import ParseMode
-import sys
 from datetime import datetime
-
 from config import API_HASH, APP_ID, LOGGER, TG_BOT_TOKEN, TG_BOT_WORKERS, FORCE_SUB_CHANNEL, CHANNEL_ID, PORT, FORCESUB_CHANNEL2
-from dotenv import load_dotenv
 from database.db_premium import remove_expired_users
+from dotenv import load_dotenv
 
-import asyncio
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
-# Define your job
-def my_job():
-    print("Job is running!")
-
-# Main function
-async def main():
-    scheduler = AsyncIOScheduler()
-    scheduler.add_job(my_job, 'interval', seconds=10)  # Run job every 10 seconds
-    scheduler.start()
-    print("Scheduler started!")
-
-    # Keep the loop alive
-    try:
-        await asyncio.Event().wait()
-    except KeyboardInterrupt:
-        print("Shutting down scheduler...")
-        scheduler.shutdown()
-
-# Entry point
-if __name__ == "__main__":
-    asyncio.run(main())
-
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-scheduler = AsyncIOScheduler()
-scheduler.add_job(remove_expired_users, "interval", seconds=3600)
-scheduler.start()
-
+# Load environment variables
 load_dotenv(".env")
 
+
+# Define the bot class
 class Bot(Client):
     def __init__(self):
         super().__init__(
             name="Bot",
             api_hash=API_HASH,
             api_id=APP_ID,
-            plugins={
-                "root": "plugins"
-            },
+            plugins={"root": "plugins"},
             workers=TG_BOT_WORKERS,
             bot_token=TG_BOT_TOKEN
         )
@@ -64,49 +32,63 @@ class Bot(Client):
         usr_bot_me = await self.get_me()
         self.uptime = datetime.now()
 
+        # Force Subscription Logic
         if FORCE_SUB_CHANNEL:
             try:
                 link = await self.export_chat_invite_link(FORCE_SUB_CHANNEL)
                 self.invitelink = link
-            except Exception as a:
-                self.LOGGER(__name__).warning(a)
-                self.LOGGER(__name__).warning("Bot can't Export Invite link from Force Sub Channel!")
-                self.LOGGER(__name__).warning(f"Please Double check the FORCE_SUB_CHANNEL value and Make sure Bot is Admin in channel with Invite Users via Link Permission, Current Force Sub Channel Value: {FORCE_SUB_CHANNEL}")
-                self.LOGGER(__name__).info("\nBot Stopped. @im_piro for support")
+            except Exception as e:
+                self.LOGGER(__name__).warning(e)
+                self.LOGGER(__name__).info("Bot Stopped. Check FORCE_SUB_CHANNEL configuration.")
                 sys.exit()
+
         if FORCESUB_CHANNEL2:
             try:
-                link = (await self.get_chat(FORCESUB_CHANNEL2)).invite_link
-                if not link:
-                    await self.export_chat_invite_link(FORCESUB_CHANNEL2)
-                    link = (await self.get_chat(FORCESUB_CHANNEL2)).invite_link
+                link = (await self.get_chat(FORCESUB_CHANNEL2)).invite_link or await self.export_chat_invite_link(FORCESUB_CHANNEL2)
                 self.invitelink2 = link
-            except Exception as a:
-                self.LOGGER(__name__).warning(a)
-                self.LOGGER(__name__).warning("Bot can't Export Invite link from Force Sub Channel!")
-                self.LOGGER(__name__).warning(f"Please Double check the FORCESUB_CHANNEL2 value and Make sure Bot is Admin in channel with Invite Users via Link Permission, Current Force Sub Channel Value: {FORCESUB_CHANNEL2}")
-                self.LOGGER(__name__).info("\nBot Stopped. Dm https://t.me/im_piro for support")
+            except Exception as e:
+                self.LOGGER(__name__).warning(e)
+                self.LOGGER(__name__).info("Bot Stopped. Check FORCESUB_CHANNEL2 configuration.")
                 sys.exit()
+
+        # DB Channel Logic
         try:
-            db_channel = await self.get_chat(CHANNEL_ID)
-            self.db_channel = db_channel
-            
+            self.db_channel = await self.get_chat(CHANNEL_ID)
         except Exception as e:
             self.LOGGER(__name__).warning(e)
-            self.LOGGER(__name__).warning(f"Make Sure bot is Admin in DB Channel, and Double check the CHANNEL_ID Value, Current Value {CHANNEL_ID}")
-            self.LOGGER(__name__).info("\nBot Stopped. @im_piro for support")
+            self.LOGGER(__name__).info("Bot Stopped. Check CHANNEL_ID configuration.")
             sys.exit()
 
         self.set_parse_mode(ParseMode.HTML)
-        self.LOGGER(__name__).info(f"Bot Running..! Made by @im_piro")
+        self.LOGGER(__name__).info(f"Bot Running as @{usr_bot_me.username}!")
 
-        self.username = usr_bot_me.username
-        #web-response
+        # Start web server
         app = web.AppRunner(await web_server())
         await app.setup()
-        bind_address = "0.0.0.0"
-        await web.TCPSite(app, bind_address, PORT).start()
+        await web.TCPSite(app, "0.0.0.0", PORT).start()
 
     async def stop(self, *args):
         await super().stop()
-        self.LOGGER(__name__).info("Bot stopped. Made By @im_piro")
+        self.LOGGER(__name__).info("Bot stopped.")
+
+
+# Function to handle scheduled tasks
+def schedule_jobs():
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(remove_expired_users, "interval", seconds=3600)
+    scheduler.start()
+
+
+# Main entry point
+async def main():
+    bot = Bot()
+    schedule_jobs()
+    await bot.start()
+    await asyncio.Event().wait()  # Keep the bot running
+
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("Bot stopped manually.")

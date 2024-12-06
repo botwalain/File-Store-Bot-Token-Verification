@@ -53,7 +53,7 @@ async def start_command(client: Client, message: Message):
             if verify_status['verify_token'] != token:
                 return await message.reply("Your token is invalid or expired. Try again by clicking /start")
             await update_verify_status(id, is_verified=True, verified_time=time.time())
-            await message.reply("Your token has been successfully verified and is valid for 24 hours.", reply_markup=None, protect_content=False, quote=True)
+            await message.reply("Your token has been successfully verified and is valid for 12 hours.", reply_markup=None, protect_content=False, quote=True)
 
         elif decoded_string.startswith("premium"):
             if not is_premium:
@@ -105,7 +105,7 @@ async def start_command(client: Client, message: Message):
                 [
                     InlineKeyboardButton(text="• ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ •", callback_data="premium")
                 ]
-                await message.reply(f"Your ads token is expired or invalid. Please verify to access the files.\n\nToken Timeout: {get_exp_time(VERIFY_EXPIRE)}\n\nThis is an ads token. If you pass 1 ad, you can use the bot for 24 hours after passing the ad.", reply_markup=InlineKeyboardMarkup(btn), protect_content=False, quote=True)
+                await message.reply(f"Your ads token is expired or invalid. Please verify to access the files.\n\nToken Timeout: {get_exp_time(VERIFY_EXPIRE)}\n\nThis is an ads token. If you pass 1 ad, you can use the bot for 12 hours after passing the ad.", reply_markup=InlineKeyboardMarkup(btn), protect_content=False, quote=True)
                 return
 
             argument = decoded_string.split("-")
@@ -144,7 +144,7 @@ async def start_command(client: Client, message: Message):
     else:
         try:
             reply_markup = InlineKeyboardMarkup([
-                [InlineKeyboardButton("• ғᴏʀ ᴍᴏʀᴇ •", url='https://t.me/DelightRedirect')],
+                [InlineKeyboardButton("• ғᴏʀ ᴍᴏʀᴇ •", url='https://t.me/DelightNetwork')],
                 [InlineKeyboardButton("ᴄʟᴏsᴇ", callback_data='close'),
                  InlineKeyboardButton("ᴀʙᴏᴜᴛ", callback_data='about')]
            ])
